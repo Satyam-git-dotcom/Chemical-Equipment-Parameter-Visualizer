@@ -1,5 +1,7 @@
 import { useState } from "react";
 import UploadCSV from "./components/UploadCSV";
+import SummaryCards from "./components/SummaryCards";
+import Charts from "./components/Charts";
 
 function App() {
   const [summary, setSummary] = useState(null);
@@ -12,9 +14,10 @@ function App() {
       <UploadCSV onUploadSuccess={setSummary} />
 
       {summary && (
-        <pre style={{ background: "#f4f4f4", padding: "10px" }}>
-          {JSON.stringify(summary, null, 2)}
-        </pre>
+        <>
+          <SummaryCards summary={summary} />
+          <Charts distribution={summary.equipment_distribution} />
+        </>
       )}
     </div>
   );

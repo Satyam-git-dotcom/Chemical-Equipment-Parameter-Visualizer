@@ -1,11 +1,14 @@
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Dataset
 from .utils import analyze_csv
 
 class UploadCSVView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         file = request.FILES.get("file")
@@ -13,14 +16,21 @@ class UploadCSVView(APIView):
         if not file:
             return Response({"error": "No file uploaded"}, status=400)
 
-        summary = analyze_csv(file)
+        try:
+            summary = analyze_csv(file)
 
-        Dataset.objects.create(
-            name=file.name,
-            summary=summary
-        )
+            Dataset.objects.create(
+                name=file.name,
+                summary=summary
+            )
 
-        return Response(summary)
+            return Response(summary)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=400
+            )
     
 class HistoryView(APIView):
     permission_classes = [IsAuthenticated]
