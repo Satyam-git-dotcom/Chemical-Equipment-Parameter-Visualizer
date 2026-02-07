@@ -8,10 +8,10 @@ function SummaryCards({ summary }) {
         marginBottom: "30px",
       }}
     >
-      <Card title="Total Equipment" value={summary.total_equipment} />
-      <Card title="Avg Flowrate" value={summary.avg_flowrate} />
-      <Card title="Avg Pressure" value={summary.avg_pressure} />
-      <Card title="Avg Temperature" value={summary.avg_temperature} />
+      <Card title="📦 Total Equipment" value={summary.total_equipment} />
+      <Card title="🌊 Avg Flowrate" value={summary.avg_flowrate} />
+      <Card title="⚙️ Avg Pressure" value={summary.avg_pressure} />
+      <Card title="🌡️ Avg Temperature" value={summary.avg_temperature} />
     </div>
   );
 }
