@@ -55,17 +55,29 @@ from .pdf_utils import generate_pdf
 class PDFReportView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        dataset = Dataset.objects.order_by("-uploaded_at").first()
+    def get(self, request, dataset_id=None):
+        if dataset_id:
+            dataset = Dataset.objects.get(id=dataset_id)
+        else:
+            dataset = Dataset.objects.order_by("-uploaded_at").first()
 
-        if not dataset:
-            return Response({"error": "No dataset available"}, status=404)
-
-        pdf_buffer = generate_pdf(dataset)
-
-        return FileResponse(
-            pdf_buffer,
-            as_attachment=True,
-            filename="equipment_report.pdf"
-        )
+        pdf = generate_pdf(dataset)
+        return FileResponse(pdf, as_attachment=True, filename="equipment_report.pdf")
     
+class HistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        datasets = Dataset.objects.order_by("-uploaded_at")[:5]
+
+        data = [
+            {
+                "id": d.id,
+                "name": d.name,
+                "uploaded_at": d.uploaded_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "summary": d.summary
+            }
+            for d in datasets
+        ]
+
+        return Response(data)
