@@ -68,3 +68,4 @@ class PDFReportView(APIView):
             as_attachment=True,
             filename="equipment_report.pdf"
         )
+    

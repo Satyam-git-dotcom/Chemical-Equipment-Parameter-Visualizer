@@ -27,13 +27,25 @@ function UploadCSV({ onUploadSuccess }) {
   };
 
   return (
-    <div style={{ marginBottom: "20px" }}>
+    <div
+      style={{
+        marginBottom: "30px",
+        padding: "20px",
+        border: "1px solid #e0e0e0",
+        borderRadius: "8px",
+        background: "#fafafa",
+      }}
+    >
+      <h3>Upload Equipment CSV</h3>
+
       <input
         type="file"
         accept=".csv"
         onChange={(e) => setFile(e.target.files[0])}
       />
+
       <br /><br />
+
       <button onClick={handleUpload} disabled={loading}>
         {loading ? "Uploading..." : "Upload CSV"}
       </button>
