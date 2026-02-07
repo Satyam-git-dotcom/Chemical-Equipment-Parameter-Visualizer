@@ -1,21 +1,24 @@
-# Chemical Equipment Parameter Visualizer  
+# 🧪Chemical Equipment Parameter Visualizer  
 Hybrid Web and Desktop Application for Data Visualization and Analytics
 
 ---
 
-## Project Overview
+## 📌Project Overview
 
 The Chemical Equipment Parameter Visualizer is a hybrid application designed to analyze and visualize operational data of chemical equipment such as pumps, reactors, valves, and heat exchangers. Users can upload a CSV file containing equipment parameters, and the system processes the data to generate analytical insights. The application is accessible through both a Web Dashboard and a Desktop Application, powered by a common Django REST backend.
 
 ---
 
-## System Architecture
+## 🏗️System Architecture
 
 React Web Application and PyQt5 Desktop Application both communicate with a centralized Django REST API. The backend performs data parsing, analytics, history management, and PDF report generation, ensuring consistent results across platforms.
+React Web Application ───┐
+├── Django REST API ─── SQLite Database
+PyQt5 Desktop Application ─┘
 
 ---
 
-## Technology Stack
+## 🛠️Technology Stack
 
 Backend: Django, Django REST Framework  
 Web Frontend: React.js (Vite), Chart.js  
@@ -28,18 +31,18 @@ Version Control: Git and GitHub
 
 ---
 
-## Project Structure
+## 📁Project Structure
 
 Chemical-Equipment-Parameter-Visualizer  
-backend  
-frontend-web  
-frontend-desktop  
-sample_equipment_data.csv  
-README.md  
+--backend  
+--frontend-web  
+--frontend-desktop  
+--sample_equipment_data.csv  
+--README.md  
 
 ---
 
-## Backend Setup Instructions
+## ⚙️Backend Setup Instructions
 
 Navigate to the backend directory and execute the following commands:
 
@@ -56,7 +59,7 @@ http://127.0.0.1:8000/
 
 ---
 
-## Web Frontend Setup Instructions
+## 🌐Web Frontend Setup Instructions
 
 Navigate to the web frontend directory and run:
 
@@ -69,7 +72,7 @@ http://localhost:5173/
 
 ---
 
-## Desktop Application Setup Instructions
+## 🖥️Desktop Application Setup Instructions
 
 Navigate to the desktop application directory and run:
 
@@ -80,7 +83,7 @@ The desktop application connects to the same Django REST API.
 
 ---
 
-## Features Implemented
+## ✨Features Implemented
 
 CSV Upload:  
 Users can upload CSV files from both the Web and Desktop applications. The backend processes the file using Pandas.
@@ -105,7 +108,7 @@ Basic authentication is implemented to secure API endpoints.
 
 ---
 
-## Sample CSV Format
+## 📄Sample CSV Format
 
 Equipment Name,Type,Flowrate,Pressure,Temperature  
 Pump A,Pump,120,5,80  
@@ -117,24 +120,24 @@ A sample file named sample_equipment_data.csv is included for testing and demons
 
 ---
 
-## Deployment (Optional)
+## 🌐Deployment (Optional)
 
 The web frontend can be deployed using Netlify (free tier). The backend and desktop application are intended to run locally during demonstrations. This approach is suitable for academic and FOSSEE project submissions.
 
 ---
 
-## Demo Video
+## 🎥Demo Video
 
 A short demo video (2–3 minutes) demonstrates CSV upload, analytics dashboard, interactive charts, history management, PDF report generation, and the desktop application workflow.
 
 ---
 
-## Academic Note
+## 🎓Academic Note
 
 This project demonstrates hybrid application development, REST API integration, data analytics using Pandas, interactive data visualization, UI/UX enhancement, and proper version control practices.
 
 ---
 
-## Conclusion
+## ✅Conclusion
 
 The Chemical Equipment Parameter Visualizer is a complete hybrid solution for analyzing chemical equipment data through both web and desktop platforms. The project fulfills all specified requirements and is ready for academic and FOSSEE submission.
