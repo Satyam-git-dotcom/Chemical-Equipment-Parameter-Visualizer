@@ -48,3 +48,23 @@ class HistoryView(APIView):
         ]
 
         return Response(data)
+    
+from django.http import FileResponse
+from .pdf_utils import generate_pdf
+
+class PDFReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        dataset = Dataset.objects.order_by("-uploaded_at").first()
+
+        if not dataset:
+            return Response({"error": "No dataset available"}, status=404)
+
+        pdf_buffer = generate_pdf(dataset)
+
+        return FileResponse(
+            pdf_buffer,
+            as_attachment=True,
+            filename="equipment_report.pdf"
+        )
