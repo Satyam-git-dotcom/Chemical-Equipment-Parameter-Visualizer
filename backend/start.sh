@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o errexit
 
-cd backend/equipment_visualizer
+cd equipment_visualizer
 
 python manage.py migrate
 python manage.py collectstatic --noinput
