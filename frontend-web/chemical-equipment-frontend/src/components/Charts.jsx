@@ -25,71 +25,95 @@ function Charts({ distribution, dark }) {
   const values = Object.values(distribution);
 
   const colors = dark
-    ? ["#36b9cc", "#1cc88a", "#f6c23e", "#e74a3b"]
-    : ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e"];
+    ? ["#22d3ee", "#34d399", "#fbbf24", "#f87171", "#a78bfa"]
+    : ["#2563eb", "#059669", "#0ea5e9", "#f59e0b", "#dc2626"];
 
-  const data = {
+  const chartData = {
     labels,
     datasets: [
       {
         label: "Equipment Count",
         data: values,
         backgroundColor: colors,
+        borderRadius: 6,
       },
     ],
   };
 
   const exportChart = () => {
     const canvas = document.querySelector("canvas");
+    if (!canvas) return;
     const link = document.createElement("a");
-    link.download = "equipment_chart.png";
-    link.href = canvas.toDataURL();
+    link.download = "equipment_distribution.png";
+    link.href = canvas.toDataURL("image/png");
     link.click();
   };
 
- return (
-  <div style={{ marginTop: "30px" }}>
-    <h3>Equipment Distribution</h3>
-
-    <button
-      onClick={exportChart}
-      style={{ marginBottom: "15px" }}
-    >
-      📄 Export Chart
-    </button>
-
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "30px",
-        alignItems: "center",
-      }}
-    >
+  return (
+    <div style={{ marginTop: "32px" }}>
       <div
         style={{
-          background: dark ? "#1f1f1f" : "#fafafa",
-          padding: "20px",
-          borderRadius: "8px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+          flexWrap: "wrap",
+          gap: "12px",
         }}
       >
-        <h4 style={{ textAlign: "center" }}>Bar Chart</h4>
-        <Bar data={data} />
+        <h3 style={{ margin: 0 }}>Equipment Distribution</h3>
+
+        <button
+          onClick={exportChart}
+          style={{
+            padding: "8px 14px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            background: dark ? "#374151" : "#eef2ff",
+            color: dark ? "#e5e7eb" : "#1e3a8a",
+            fontWeight: 600,
+          }}
+        >
+          📊 Export Chart
+        </button>
       </div>
 
       <div
         style={{
-          background: dark ? "#1f1f1f" : "#fafafa",
-          padding: "20px",
-          borderRadius: "8px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "24px",
         }}
       >
-        <h4 style={{ textAlign: "center" }}>Pie Chart</h4>
-        <Pie data={data} />
+        <div
+          style={{
+            background: dark ? "#111827" : "#f9fafb",
+            padding: "20px",
+            borderRadius: "14px",
+          }}
+        >
+          <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+            Bar Chart
+          </h4>
+          <Bar data={chartData} />
+        </div>
+
+        <div
+          style={{
+            background: dark ? "#111827" : "#f9fafb",
+            padding: "20px",
+            borderRadius: "14px",
+          }}
+        >
+          <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+            Pie Chart
+          </h4>
+          <Pie data={chartData} />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default Charts;

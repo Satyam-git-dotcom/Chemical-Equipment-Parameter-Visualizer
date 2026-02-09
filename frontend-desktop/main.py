@@ -189,9 +189,16 @@ class EquipmentVisualizer(QWidget):
                 "Upload Successful",
                 "CSV uploaded successfully. Analytics loaded."
             )
-
+            
             # Refresh history panel (for listing only)
             self.load_history()
+
+            # Set dataset_id from latest history entry for PDF download
+            if self.history_list.count() > 0:
+                latest_item = self.history_list.item(0)
+                history_data = latest_item.data(Qt.UserRole)
+                self.dataset_id = history_data.get("id")
+                self.pdf_btn.setEnabled(self.dataset_id is not None)
         else:
             QMessageBox.warning(self, "Error", "Upload failed")
 
