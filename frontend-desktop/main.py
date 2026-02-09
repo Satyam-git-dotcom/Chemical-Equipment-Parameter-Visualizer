@@ -142,33 +142,17 @@ class EquipmentVisualizer(QWidget):
 
     def load_from_history(self, item):
         history_data = item.data(Qt.UserRole)
-        dataset_id = history_data.get("id")
+        self.dataset_id = history_data.get("id")
 
-        if not dataset_id:
-            QMessageBox.warning(self, "Error", "Invalid dataset selected")
-            return
-
-        try:
-            r = requests.get(
-                f"{API_DATASET_DETAIL_URL}{dataset_id}/",
-                auth=(USERNAME, PASSWORD),
-                timeout=10
-            )
-        except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
-            return
-
-        if r.status_code == 200:
-            data = r.json()
-            self.dataset_id = dataset_id
+        if self.dataset_id:
             self.pdf_btn.setEnabled(True)
-            self.update_dashboard(data)
-        else:
-            QMessageBox.warning(
+            QMessageBox.information(
                 self,
-                "Error",
-                f"Failed to load dataset details ({r.status_code})"
+                "Dataset Selected",
+                "Dataset selected from history. You can download its PDF report."
             )
+        else:
+            QMessageBox.warning(self, "Error", "Invalid dataset selected")
 
     # ---------- API ACTIONS ----------
     def upload_csv(self):
@@ -191,17 +175,23 @@ class EquipmentVisualizer(QWidget):
             return
 
         if r.status_code == 200:
+            data = r.json()
+
+            # Show analytics immediately from upload response
+            self.update_dashboard(data)
+
+            # dataset_id may or may not be present; history will handle PDF
+            self.dataset_id = data.get("dataset_id") or data.get("id")
+            self.pdf_btn.setEnabled(self.dataset_id is not None)
+
             QMessageBox.information(
                 self,
                 "Upload Successful",
-                "CSV uploaded successfully. Select a dataset from History to view details."
+                "CSV uploaded successfully. Analytics loaded."
             )
-            self.load_history()
 
-            # Auto-load latest dataset from history
-            if self.history_list.count() > 0:
-                latest_item = self.history_list.item(0)
-                self.load_from_history(latest_item)
+            # Refresh history panel (for listing only)
+            self.load_history()
         else:
             QMessageBox.warning(self, "Error", "Upload failed")
 
