@@ -13,11 +13,7 @@ from matplotlib.figure import Figure
 
 API_UPLOAD_URL = "http://127.0.0.1:8000/api/upload/"
 API_HISTORY_URL = "http://127.0.0.1:8000/api/history/"
-API_PDF_URL = "http://127.0.0.1:8000/api/pdf/"
-API_DATASET_DETAIL_URL = "http://127.0.0.1:8000/api/dataset/"
-USERNAME = "satyamDjango"
-PASSWORD = "Django@123"
-
+API_PDF_URL = "http://127.0.0.1:8000/api/report/"
 
 class ChartWidget(FigureCanvas):
     def __init__(self, title):
@@ -118,7 +114,7 @@ class EquipmentVisualizer(QWidget):
 
     def load_history(self):
         try:
-            r = requests.get(API_HISTORY_URL, auth=(USERNAME, PASSWORD), timeout=10)
+            r = requests.get(API_HISTORY_URL, timeout=10)
             if r.status_code == 200:
                 self.history_list.clear()
                 history_data = r.json()
@@ -129,7 +125,7 @@ class EquipmentVisualizer(QWidget):
 
                 for d in history_data:
                     item = QListWidgetItem(
-                        f"{d.get('uploaded_at', 'N/A')} | Total: {d.get('total_equipment', '-')}"
+                        f"{d.get('uploaded_at', 'N/A')} | {d.get('name', 'dataset')} (ID: {d.get('id')})"
                     )
                     item.setData(Qt.UserRole, d)
                     self.history_list.addItem(item)
@@ -144,15 +140,15 @@ class EquipmentVisualizer(QWidget):
         history_data = item.data(Qt.UserRole)
         self.dataset_id = history_data.get("id")
 
-        if self.dataset_id:
-            self.pdf_btn.setEnabled(True)
-            QMessageBox.information(
-                self,
-                "Dataset Selected",
-                "Dataset selected from history. You can download its PDF report."
-            )
-        else:
+        if not self.dataset_id:
             QMessageBox.warning(self, "Error", "Invalid dataset selected")
+            return
+
+        self.pdf_btn.setEnabled(True)
+
+        summary = history_data.get("summary")
+        if summary:
+            self.update_dashboard(summary)
 
     # ---------- API ACTIONS ----------
     def upload_csv(self):
@@ -167,7 +163,6 @@ class EquipmentVisualizer(QWidget):
                 r = requests.post(
                     API_UPLOAD_URL,
                     files={"file": f},
-                    auth=(USERNAME, PASSWORD),
                     timeout=10
                 )
         except Exception as e:
@@ -177,28 +172,16 @@ class EquipmentVisualizer(QWidget):
         if r.status_code == 200:
             data = r.json()
 
-            # Show analytics immediately from upload response
             self.update_dashboard(data)
-
-            # dataset_id may or may not be present; history will handle PDF
-            self.dataset_id = data.get("dataset_id") or data.get("id")
+            self.dataset_id = data.get("dataset_id")
             self.pdf_btn.setEnabled(self.dataset_id is not None)
+            self.load_history()
 
             QMessageBox.information(
                 self,
                 "Upload Successful",
                 "CSV uploaded successfully. Analytics loaded."
             )
-            
-            # Refresh history panel (for listing only)
-            self.load_history()
-
-            # Set dataset_id from latest history entry for PDF download
-            if self.history_list.count() > 0:
-                latest_item = self.history_list.item(0)
-                history_data = latest_item.data(Qt.UserRole)
-                self.dataset_id = history_data.get("id")
-                self.pdf_btn.setEnabled(self.dataset_id is not None)
         else:
             QMessageBox.warning(self, "Error", "Upload failed")
 
@@ -220,7 +203,6 @@ class EquipmentVisualizer(QWidget):
         try:
             r = requests.get(
                 f"{API_PDF_URL}{self.dataset_id}/",
-                auth=(USERNAME, PASSWORD),
                 timeout=10
             )
         except Exception as e:
@@ -240,23 +222,26 @@ class EquipmentVisualizer(QWidget):
 
     # ---------- UPDATE DASHBOARD ----------
     def update_dashboard(self, data):
-        dist = data["equipment_distribution"]
+        if not data:
+            return
+
+        dist = data.get("equipment_distribution", {})
         self.bar.draw_bar(dist.keys(), dist.values())
         self.pie.draw_pie(dist.keys(), dist.values())
         self.line.draw_line(
             ["Flowrate", "Pressure", "Temperature"],
             [
-                data["avg_flowrate"],
-                data["avg_pressure"],
-                data["avg_temperature"]
+                data.get("avg_flowrate", 0),
+                data.get("avg_pressure", 0),
+                data.get("avg_temperature", 0)
             ]
         )
 
         self.summary.setText(
-            f"Total Equipment: {data['total_equipment']}\n"
-            f"Avg Flowrate: {data['avg_flowrate']}\n"
-            f"Avg Pressure: {data['avg_pressure']}\n"
-            f"Avg Temperature: {data['avg_temperature']}"
+            f"Total Equipment: {data.get('total_equipment', 0)}\n"
+            f"Avg Flowrate: {data.get('avg_flowrate', 0)}\n"
+            f"Avg Pressure: {data.get('avg_pressure', 0)}\n"
+            f"Avg Temperature: {data.get('avg_temperature', 0)}"
         )
 
 

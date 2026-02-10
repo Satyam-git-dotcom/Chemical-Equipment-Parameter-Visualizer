@@ -13,7 +13,7 @@ from .models import Dataset
 from .utils import analyze_csv
 
 class UploadCSVView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
@@ -25,12 +25,15 @@ class UploadCSVView(APIView):
         try:
             summary = analyze_csv(file)
 
-            Dataset.objects.create(
+            dataset = Dataset.objects.create(
                 name=file.name,
                 summary=summary
             )
 
-            return Response(summary)
+            return Response({
+                "dataset_id": dataset.id,
+                **summary
+            })
 
         except Exception as e:
             return Response(
@@ -38,27 +41,16 @@ class UploadCSVView(APIView):
                 status=400
             )
     
-class HistoryView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        datasets = Dataset.objects.order_by('-uploaded_at')[:5]
-
-        data = [
-            {
-                "name": d.name,
-                "uploaded_at": d.uploaded_at,
-                "summary": d.summary
-            }
-            for d in datasets
-        ]
-
-        return Response(data)
     
 def generate_charts(dataset):
     temp_dir = tempfile.mkdtemp()
 
-    distribution = dataset.equipment_distribution
+    summary = dataset.summary or {}
+    if isinstance(summary, str):
+        import json
+        summary = json.loads(summary)
+
+    distribution = summary.get("equipment_distribution", {})
 
     labels = list(distribution.keys())
     values = list(distribution.values())
@@ -66,7 +58,8 @@ def generate_charts(dataset):
     # --- BAR CHART ---
     bar_path = os.path.join(temp_dir, "bar.png")
     plt.figure()
-    plt.bar(labels, values)
+    if labels and values:
+        plt.bar(labels, values)
     plt.title("Equipment Distribution")
     plt.tight_layout()
     plt.savefig(bar_path)
@@ -75,7 +68,8 @@ def generate_charts(dataset):
     # --- PIE CHART ---
     pie_path = os.path.join(temp_dir, "pie.png")
     plt.figure()
-    plt.pie(values, labels=labels, autopct="%1.1f%%")
+    if values:
+        plt.pie(values, labels=labels, autopct="%1.1f%%")
     plt.title("Equipment Share")
     plt.tight_layout()
     plt.savefig(pie_path)
@@ -87,9 +81,9 @@ def generate_charts(dataset):
     plt.plot(
         ["Flowrate", "Pressure", "Temperature"],
         [
-            dataset.avg_flowrate,
-            dataset.avg_pressure,
-            dataset.avg_temperature
+            summary.get("avg_flowrate", 0),
+            summary.get("avg_pressure", 0),
+            summary.get("avg_temperature", 0),
         ],
         marker="o"
     )
@@ -108,25 +102,34 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 class PDFReportView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def get(self, request, dataset_id):
-        dataset = Dataset.objects.get(id=dataset_id)
+        try:
+            dataset = Dataset.objects.get(id=dataset_id)
+        except Dataset.DoesNotExist:
+            return Response({"error": "Dataset not found"}, status=404)
 
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = "attachment; filename=equipment_report.pdf"
+        response["Content-Disposition"] = f'attachment; filename="equipment_report_{dataset_id}.pdf"'
 
         doc = SimpleDocTemplate(response, pagesize=A4)
         styles = getSampleStyleSheet()
         elements = []
 
         elements.append(Paragraph("<b>Chemical Equipment Report</b>", styles["Title"]))
-        elements.append(Paragraph(f"Total Equipment: {dataset.total_equipment}", styles["Normal"]))
-        elements.append(Paragraph(f"Average Flowrate: {dataset.avg_flowrate}", styles["Normal"]))
-        elements.append(Paragraph(f"Average Pressure: {dataset.avg_pressure}", styles["Normal"]))
-        elements.append(Paragraph(f"Average Temperature: {dataset.avg_temperature}", styles["Normal"]))
+        elements.append(Paragraph(f"Dataset ID: {dataset.id}", styles["Normal"]))
 
-        # --- GENERATE CHARTS ---
+        summary = dataset.summary
+        if isinstance(summary, str):
+            import json
+            summary = json.loads(summary)
+
+        elements.append(Paragraph(f"Total Equipment: {summary.get('total_equipment')}", styles["Normal"]))
+        elements.append(Paragraph(f"Average Flowrate: {summary.get('avg_flowrate')}", styles["Normal"]))
+        elements.append(Paragraph(f"Average Pressure: {summary.get('avg_pressure')}", styles["Normal"]))
+        elements.append(Paragraph(f"Average Temperature: {summary.get('avg_temperature')}", styles["Normal"]))
+
         bar, pie, line = generate_charts(dataset)
 
         elements.append(Paragraph("<b>Equipment Distribution</b>", styles["Heading2"]))
@@ -142,19 +145,17 @@ class PDFReportView(APIView):
         return response
     
 class HistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
     def get(self, request):
         datasets = Dataset.objects.order_by("-uploaded_at")[:5]
-
         data = [
             {
                 "id": d.id,
                 "name": d.name,
                 "uploaded_at": d.uploaded_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "summary": d.summary
+                "summary": d.summary,
             }
             for d in datasets
         ]
-
         return Response(data)
